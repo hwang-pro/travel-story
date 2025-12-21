@@ -1,7 +1,7 @@
-import { initializeApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
-import { getStorage } from 'firebase/storage';
+import { initializeApp, type FirebaseApp } from 'firebase/app';
+import { getAuth, GoogleAuthProvider, type Auth } from 'firebase/auth';
+import { getFirestore, type Firestore } from 'firebase/firestore';
+import { getStorage, type FirebaseStorage } from 'firebase/storage';
 
 // Firebase 설정 (환경 변수로 관리하는 것을 권장합니다)
 const firebaseConfig = {
@@ -21,11 +21,11 @@ console.log('Config:', {
   projectId: firebaseConfig.projectId,
 });
 
-let app;
-let auth;
-let db;
-let storage;
-let googleProvider;
+let app: FirebaseApp;
+let auth: Auth;
+let db: Firestore;
+let storage: FirebaseStorage;
+let googleProvider: GoogleAuthProvider;
 
 try {
   app = initializeApp(firebaseConfig);
@@ -37,11 +37,19 @@ try {
   console.log('✅ Firebase 초기화 성공!');
 } catch (error) {
   console.error('❌ Firebase 초기화 실패:', error);
-  // 더미 객체로 대체
-  auth = {} as any;
-  db = {} as any;
-  storage = {} as any;
-  googleProvider = {} as any;
+  // 더미 객체로 대체 (타입 안전성을 위해)
+  const dummyApp = initializeApp({
+    apiKey: 'dummy',
+    authDomain: 'dummy',
+    projectId: 'dummy',
+    storageBucket: 'dummy',
+    messagingSenderId: 'dummy',
+    appId: 'dummy',
+  });
+  auth = getAuth(dummyApp);
+  db = getFirestore(dummyApp);
+  storage = getStorage(dummyApp);
+  googleProvider = new GoogleAuthProvider();
 }
 
 export { auth, db, storage, googleProvider };

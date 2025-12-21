@@ -4,6 +4,8 @@ export { Input } from './Input';
 export { Textarea } from './Textarea';
 export { LoadingSpinner } from './LoadingSpinner';
 export { Navbar } from './Navbar';
+export { BookPage } from './BookPage';
+export { PageTurner } from './PageTurner';
 
 
 

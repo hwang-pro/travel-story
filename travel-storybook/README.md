@@ -58,20 +58,60 @@ VITE_OPENAI_API_KEY=your_openai_api_key_here
 
 ## 🚀 실행 방법
 
+### 개발 환경
+
 개발 서버 실행:
 \`\`\`bash
 npm run dev
 \`\`\`
 
-프로덕션 빌드:
+브라우저에서 `http://localhost:5173` 접속
+
+### 프로덕션 빌드
+
+빌드 실행:
 \`\`\`bash
 npm run build
 \`\`\`
 
-빌드 미리보기:
+빌드 결과물은 `dist/` 폴더에 생성됩니다.
+
+빌드 미리보기 (로컬 테스트):
 \`\`\`bash
 npm run preview
 \`\`\`
+
+## 🌐 배포 방법
+
+이 프로젝트는 **JCloud Ubuntu 서버**에 배포됩니다.
+
+### 배포 흐름
+
+1. **로컬에서 빌드**
+   \`\`\`bash
+   npm run build
+   \`\`\`
+
+2. **빌드 폴더를 JCloud 서버로 업로드**
+   - `dist/` 폴더의 모든 파일을 서버의 `/var/www/travel-storybook/dist/` 경로로 업로드
+   - SCP, SFTP, 또는 Git 사용
+
+3. **Nginx로 정적 파일 서비스**
+   - Nginx 설정 파일 참고: `nginx.conf.example`
+   - React Router SPA 라우팅 설정 필요
+
+4. **서버 재시작**
+   \`\`\`bash
+   sudo systemctl restart nginx
+   \`\`\`
+
+**자세한 배포 가이드는 [DEPLOY.md](./DEPLOY.md)를 참고하세요.**
+
+### 중요사항
+
+- ❌ **Firebase Hosting 사용 안 함**: JCloud에 직접 배포합니다.
+- ✅ **Nginx 사용**: Ubuntu 서버에서 Nginx로 정적 파일을 서빙합니다.
+- ✅ **빌드 파일만 업로드**: `dist/` 폴더의 파일만 서버에 업로드합니다.
 
 ## 📁 프로젝트 구조
 

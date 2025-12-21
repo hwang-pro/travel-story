@@ -36,31 +36,33 @@ export const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4">
-      <div className="absolute inset-0 bg-gradient-to-br from-beige-100 via-white to-pastel-pink -z-10" />
-      
-      <Card className="w-full max-w-md p-8 sm:p-12">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-900 rounded-full mb-4">
-            <BookOpen className="w-8 h-8 text-white" />
+    <div className="min-h-screen flex items-center justify-center px-4 py-12">
+      <Card className="w-full max-w-md p-10 sm:p-14 relative overflow-hidden">
+        {/* 책갈피 효과 */}
+        <div className="absolute top-0 right-0 w-10 h-20 bg-gradient-to-b from-vintage-brown to-vintage-tan shadow-lg opacity-80" 
+             style={{ clipPath: 'polygon(0 0, 100% 0, 100% 85%, 50% 100%, 0 85%)' }} />
+        
+        <div className="text-center mb-10 relative z-10">
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-vintage-brown rounded-full mb-6 shadow-lg">
+            <BookOpen className="w-10 h-10 text-vintage-cream" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          <h1 className="book-title text-center mb-3">
             Travel Story
           </h1>
-          <p className="text-gray-600">
+          <p className="book-text text-center text-vintage-brown/70">
             여행의 순간을 감성적인 스토리로
           </p>
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-6">
           <Button
             variant="primary"
             size="lg"
-            className="w-full"
+            className="w-full shadow-lg hover:shadow-xl transition-all"
             onClick={handleGoogleLogin}
             loading={loading}
           >
-            <span className="flex items-center justify-center gap-3">
+            <span className="flex items-center justify-center gap-3 font-book">
               <svg className="w-5 h-5" viewBox="0 0 24 24">
                 <path
                   fill="currentColor"
@@ -84,13 +86,13 @@ export const LoginPage = () => {
           </Button>
 
           {error && (
-            <div className="p-4 bg-red-50 border border-red-200 rounded-xl">
-              <p className="text-sm text-red-600 text-center">{error}</p>
+            <div className="p-4 bg-red-50/80 border border-red-200/50 rounded-md backdrop-blur-sm">
+              <p className="text-sm text-red-700 text-center font-book">{error}</p>
             </div>
           )}
         </div>
 
-        <p className="mt-8 text-xs text-gray-500 text-center">
+        <p className="mt-8 text-xs text-vintage-brown/60 text-center font-book leading-relaxed">
           로그인하면 서비스 이용약관 및 개인정보 처리방침에 동의하게 됩니다
         </p>
       </Card>
