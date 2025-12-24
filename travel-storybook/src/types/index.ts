@@ -34,6 +34,8 @@ export type StorybookPage = {
   title: string;
   caption: string;
   layout: 'full' | 'two-photos' | 'three-photos' | 'grid';
+  // 이 페이지에서 사용할 사진 인덱스 (0부터 시작, 원본 사진 배열 기준)
+  photoIndex?: number[];
 };
 
 export type Storybook = {

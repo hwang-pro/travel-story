@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { doc, getDoc, updateDoc, collection, addDoc, query, where, getDocs, Timestamp } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, collection, addDoc, query, where, getDocs, Timestamp, deleteDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { generateStorybook } from '../lib/openai';
 import { useAuth } from '../hooks/useAuth';
@@ -78,6 +78,20 @@ export const TripDetailPage = () => {
     }
   };
 
+  const handleDeletePhoto = async (photo: Photo) => {
+    if (!id) return;
+    const confirmed = confirm('이 사진을 삭제할까요? 삭제 후에는 복구할 수 없습니다.');
+    if (!confirmed) return;
+
+    try {
+      await deleteDoc(doc(db, 'photos', photo.id));
+      setPhotos((prev) => prev.filter((p) => p.id !== photo.id));
+    } catch (error) {
+      console.error('사진 삭제 오류:', error);
+      alert('사진 삭제에 실패했습니다. 다시 시도해주세요.');
+    }
+  };
+
   const handleSave = async () => {
     if (!id || !trip) return;
 
@@ -138,6 +152,7 @@ export const TripDetailPage = () => {
       // AI 스토리북 생성
       const response = await generateStorybook({
         tripTitle: title,
+        tripDate: date,
         notes: notes,
         places: places.split(',').map(p => p.trim()).filter(p => p),
         people: members.split(',').map(m => m.trim()).filter(m => m),
@@ -224,12 +239,22 @@ export const TripDetailPage = () => {
                   </p>
                   <div className="grid grid-cols-3 gap-2">
                     {photos.map((photo) => (
-                      <div key={photo.id} className="aspect-square rounded-lg overflow-hidden">
+                      <div
+                        key={photo.id}
+                        className="relative aspect-square rounded-lg overflow-hidden group"
+                      >
                         <img
                           src={photo.url}
                           alt="여행 사진"
                           className="w-full h-full object-cover"
                         />
+                        <button
+                          type="button"
+                          onClick={() => handleDeletePhoto(photo)}
+                          className="absolute top-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          삭제
+                        </button>
                       </div>
                     ))}
                   </div>

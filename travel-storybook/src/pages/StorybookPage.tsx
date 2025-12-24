@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, getDoc, deleteDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import type { Storybook, Trip, Photo } from '../types';
 import { Navbar } from '../components/Navbar';
-import { Card } from '../components/Card';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { Button } from '../components/Button';
 import { BookPage } from '../components/BookPage';
@@ -64,6 +63,23 @@ export const StorybookPage = () => {
       console.error('데이터 로딩 오류:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDeleteStorybook = async () => {
+    if (!storybook || !trip) return;
+    if (!confirm('이 스토리북을 삭제할까요? 삭제 후에는 다시 생성해야 합니다.')) return;
+
+    try {
+      await deleteDoc(doc(db, 'storybooks', storybook.id));
+      await updateDoc(doc(db, 'trips', trip.id), {
+        hasStorybook: false,
+      });
+      alert('스토리북이 삭제되었습니다.');
+      navigate(`/trip/${trip.id}`);
+    } catch (error) {
+      console.error('스토리북 삭제 오류:', error);
+      alert('스토리북 삭제에 실패했습니다. 다시 시도해주세요.');
     }
   };
 
@@ -172,9 +188,16 @@ export const StorybookPage = () => {
 
   // 페이지 컴포넌트 생성
   const pageComponents = storybook.pages.map((page, index) => {
-    const startPhotoIndex = index * 4;
-    const pagePhotos = photos.slice(startPhotoIndex, startPhotoIndex + 4);
-    
+    // AI가 내려준 photoIndex가 있으면 우선 사용, 없으면 기존 방식으로 fallback
+    const indices: number[] =
+      Array.isArray((page as any).photoIndex) && (page as any).photoIndex.length > 0
+        ? (page as any).photoIndex
+        : Array.from({ length: 4 }, (_, i) => index * 4 + i);
+
+    const pagePhotos = indices
+      .map((i) => photos[i])
+      .filter((p): p is Photo => Boolean(p));
+
     return (
       <BookPage key={index} bookmark={index === 0}>
         <div className="space-y-8 py-8">
@@ -203,13 +226,22 @@ export const StorybookPage = () => {
       
       <main className="py-8">
         <div className="book-container mb-8">
-          <button
-            onClick={() => navigate(`/trip/${id}`)}
-            className="flex items-center gap-2 text-vintage-brown/70 hover:text-vintage-brown mb-6 transition-colors font-book"
-          >
-            <ArrowLeft className="w-5 h-5" />
-            여행 상세로 돌아가기
-          </button>
+          <div className="flex items-center justify-between mb-6">
+            <button
+              onClick={() => navigate(`/trip/${id}`)}
+              className="flex items-center gap-2 text-vintage-brown/70 hover:text-vintage-brown transition-colors font-book"
+            >
+              <ArrowLeft className="w-5 h-5" />
+              여행 상세로 돌아가기
+            </button>
+            <Button
+              variant="outline"
+              className="text-red-500 border-red-300 hover:bg-red-50"
+              onClick={handleDeleteStorybook}
+            >
+              스토리북 삭제
+            </Button>
+          </div>
 
           <div className="mb-10 pb-6 border-b border-paper-300">
             <h1 className="book-title mb-3">

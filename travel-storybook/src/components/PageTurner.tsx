@@ -1,4 +1,4 @@
-import { ReactNode, useState, useEffect } from 'react';
+import { type ReactNode, useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface PageTurnerProps {
@@ -109,4 +109,5 @@ export const PageTurner = ({ pages, onPageChange }: PageTurnerProps) => {
     </div>
   );
 };
+
 

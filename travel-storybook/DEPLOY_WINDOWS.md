@@ -223,3 +223,5 @@ sudo systemctl restart nginx
 - **환경 변수**: 빌드 시점에 번들에 포함되므로, 서버에서 별도 설정 불필요
 - **Firebase Hosting 사용 안 함**: JCloud에 직접 배포합니다
 
+
+

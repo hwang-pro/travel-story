@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import { type ReactNode } from 'react';
 
 interface BookPageProps {
   children: ReactNode;
@@ -16,4 +16,5 @@ export const BookPage = ({ children, className = '', bookmark = false }: BookPag
     </div>
   );
 };
+
 

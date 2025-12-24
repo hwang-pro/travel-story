@@ -12,6 +12,7 @@ import { Plus, Calendar, Users, CheckCircle2 } from 'lucide-react';
 
 export const TripListPage = () => {
   const [trips, setTrips] = useState<Trip[]>([]);
+  const [showStorybooksOnly, setShowStorybooksOnly] = useState(false);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -83,7 +84,7 @@ export const TripListPage = () => {
       <Navbar />
       
       <main className="book-container py-12">
-        <div className="flex justify-between items-center mb-10 pb-6 border-b border-paper-300">
+        <div className="flex justify-between items-center mb-10 pb-6 border-b border-paper-300 gap-4">
           <div>
             <h1 className="book-title mb-2">
               나의 여행
@@ -93,14 +94,23 @@ export const TripListPage = () => {
             </p>
           </div>
           
-          <Button
-            variant="primary"
-            onClick={handleCreateTrip}
-            className="flex items-center gap-2 shadow-lg hover:shadow-xl transition-all"
-          >
-            <Plus className="w-5 h-5" />
-            새 여행 만들기
-          </Button>
+          <div className="flex items-center gap-3">
+            <Button
+              variant={showStorybooksOnly ? 'outline' : 'secondary'}
+              onClick={() => setShowStorybooksOnly((prev) => !prev)}
+              className="text-sm"
+            >
+              {showStorybooksOnly ? '전체 여행 보기' : '스토리북 여행만 보기'}
+            </Button>
+            <Button
+              variant="primary"
+              onClick={handleCreateTrip}
+              className="flex items-center gap-2 shadow-lg hover:shadow-xl transition-all"
+            >
+              <Plus className="w-5 h-5" />
+              새 여행 만들기
+            </Button>
+          </div>
         </div>
 
         {trips.length === 0 ? (
@@ -122,11 +132,15 @@ export const TripListPage = () => {
           </Card>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {trips.map((trip) => (
+            {trips
+              .filter((trip) => (showStorybooksOnly ? trip.hasStorybook : true))
+              .map((trip) => (
               <Card
                 key={trip.id}
                 hover
-                onClick={() => navigate(`/trip/${trip.id}`)}
+                onClick={() =>
+                  navigate(trip.hasStorybook ? `/trip/${trip.id}/storybook` : `/trip/${trip.id}`)
+                }
                 className="p-6 cursor-pointer relative group page-turn"
               >
                 {/* 책갈피 표시 */}

@@ -48,3 +48,5 @@ echo -e "   sudo systemctl reload nginx"
 echo -e "   또는"
 echo -e "   sudo systemctl restart nginx"
 
+
+
