@@ -1,5 +1,7 @@
 import type { StorybookPage } from '../types';
 
+export type StorybookTone = 'calm' | 'excited' | 'healing';
+
 export interface StorybookRequest {
   tripTitle: string;
   tripDate: string;
@@ -7,6 +9,7 @@ export interface StorybookRequest {
   places: string[];
   people: string[];
   photoUrls: string[];
+  tone?: StorybookTone; // 감성 톤 옵션
 }
 
 export interface StorybookResponse {
@@ -23,6 +26,15 @@ export async function generateStorybook(request: StorybookRequest): Promise<Stor
   // 페이지 수 = 사진 수 (각 사진당 1페이지)
   const targetPageCount = request.photoUrls.length || 1;
 
+  // 감성 톤에 따른 지시사항
+  const toneInstructions = {
+    calm: '**잔잔한 톤**: 차분하고 평온한 느낌으로 작성해주세요. 조용한 순간, 고요한 분위기, 여유로운 시간을 강조하세요.',
+    excited: '**설렘 톤**: 기대감과 설렘이 느껴지는 문체로 작성해주세요. 새로운 경험, 두근거림, 활기찬 순간을 강조하세요.',
+    healing: '**힐링 톤**: 마음이 편안해지고 위로받는 느낌으로 작성해주세요. 따뜻함, 평화로움, 소소한 행복을 강조하세요.',
+  };
+
+  const toneGuide = request.tone ? toneInstructions[request.tone] : '';
+
   const prompt = `
 당신은 **여행 기록을 감성 콘텐츠로 정리하는 작가이자 인스타 스토리 기획자**입니다.
 여행을 추천하거나 일정을 짜지 말고, 이미 다녀온 여행 기록을 바탕으로
@@ -36,6 +48,8 @@ export async function generateStorybook(request: StorybookRequest): Promise<Stor
 - 방문 장소: ${request.places.join(', ') || '미입력'}
 - 함께 간 사람: ${request.people.join(', ') || '미입력'}
 - 업로드된 사진 개수: ${request.photoUrls.length}장
+
+${toneGuide ? `[감성 톤 지시사항]\n${toneGuide}\n` : ''}
 
 [페이지 구성 규칙]
 - **각 사진당 정확히 1페이지씩** 만들어주세요.

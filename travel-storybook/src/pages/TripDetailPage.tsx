@@ -150,14 +150,33 @@ export const TripDetailPage = () => {
       await handleSave();
 
       // AI 스토리북 생성
-      const response = await generateStorybook({
-        tripTitle: title,
-        tripDate: date,
-        notes: notes,
-        places: places.split(',').map(p => p.trim()).filter(p => p),
-        people: members.split(',').map(m => m.trim()).filter(m => m),
-        photoUrls: photos.map(p => p.url),
-      });
+      let generationStatus = 'success';
+      let response;
+      
+      try {
+        response = await generateStorybook({
+          tripTitle: title,
+          tripDate: date,
+          notes: notes,
+          places: places.split(',').map(p => p.trim()).filter(p => p),
+          people: members.split(',').map(m => m.trim()).filter(m => m),
+          photoUrls: photos.map(p => p.url),
+        });
+      } catch (error) {
+        console.error('AI 생성 오류:', error);
+        generationStatus = 'fallback';
+        // 기본 스토리북 생성 (generateStorybook 내부에서 이미 처리하지만, 명시적으로 표시)
+        response = {
+          summary: '',
+          storybook: photos.map((_, index) => ({
+            page: index + 1,
+            title: `${title}의 순간 ${index + 1}`,
+            caption: `${title} 여행에서 기억에 남는 장면을 담은 페이지입니다.`,
+            layout: 'full' as const,
+            photoIndex: [index],
+          })),
+        };
+      }
 
       // 스토리북 저장
       await addDoc(collection(db, 'storybooks'), {
@@ -166,6 +185,7 @@ export const TripDetailPage = () => {
         summary: response.summary,
         pages: response.storybook,
         createdAt: Timestamp.now(),
+        generationStatus, // 'success' | 'fallback'
       });
 
       // 여행 정보 업데이트
@@ -323,12 +343,48 @@ export const TripDetailPage = () => {
                 className="flex-1 flex items-center justify-center gap-2"
                 onClick={handleGenerateStorybook}
                 loading={generating}
-                disabled={photos.length === 0}
+                disabled={photos.length === 0 || generating}
               >
-                <Sparkles className="w-5 h-5" />
-                AI 스토리북 생성
+                {generating ? (
+                  <>
+                    <Sparkles className="w-5 h-5 animate-pulse" />
+                    AI 스토리북 생성 중...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-5 h-5" />
+                    AI 스토리북 생성
+                  </>
+                )}
               </Button>
             </div>
+            
+            {generating && (
+              <Card className="p-4 bg-blue-50 border-blue-200">
+                <div className="flex items-start gap-3">
+                  <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mt-0.5" />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-blue-900 mb-1">
+                      AI가 스토리북을 생성하고 있습니다...
+                    </p>
+                    <p className="text-xs text-blue-700">
+                      잠시만 기다려주세요. 생성 실패 시 기본 스토리북으로 대체됩니다.
+                    </p>
+                  </div>
+                </div>
+              </Card>
+            )}
+            
+            {trip.hasStorybook && !generating && (
+              <Card className="p-4 bg-green-50 border-green-200">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full" />
+                  <p className="text-sm text-green-800 font-medium">
+                    스토리북 생성 완료
+                  </p>
+                </div>
+              </Card>
+            )}
 
             {trip.hasStorybook && (
               <Button

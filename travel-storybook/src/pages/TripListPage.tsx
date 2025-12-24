@@ -8,11 +8,12 @@ import { Navbar } from '../components/Navbar';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';
 import { LoadingSpinner } from '../components/LoadingSpinner';
-import { Plus, Calendar, Users, CheckCircle2 } from 'lucide-react';
+import { Plus, Calendar, Users, CheckCircle2, Grid3x3, List } from 'lucide-react';
 
 export const TripListPage = () => {
   const [trips, setTrips] = useState<Trip[]>([]);
   const [showStorybooksOnly, setShowStorybooksOnly] = useState(false);
+  const [viewMode, setViewMode] = useState<'grid' | 'timeline'>('grid');
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -32,12 +33,28 @@ export const TripListPage = () => {
       );
       
       const querySnapshot = await getDocs(q);
-      const tripsData = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as Trip[];
+      const tripsData = querySnapshot.docs
+        .map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        })) as Trip[];
       
-      setTrips(tripsData);
+      // 실제로 사용자가 정보를 입력한 여행만 필터링
+      // 제목이 "새로운 여행"이고 다른 정보가 없는 여행은 제외
+      const filteredTrips = tripsData.filter(trip => {
+        // 제목이 "새로운 여행"이 아니면 포함
+        if (trip.title !== '새로운 여행') {
+          return true;
+        }
+        // 제목이 "새로운 여행"이지만, 메모나 장소, 멤버가 있으면 포함
+        if (trip.notes || (trip.places && trip.places.length > 0) || (trip.members && trip.members.length > 0)) {
+          return true;
+        }
+        // 제목이 "새로운 여행"이고 다른 정보도 없으면 제외
+        return false;
+      });
+      
+      setTrips(filteredTrips);
     } catch (error) {
       console.error('여행 목록 로딩 오류:', error);
     } finally {
@@ -94,7 +111,31 @@ export const TripListPage = () => {
             </p>
           </div>
           
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
+            <div className="flex items-center gap-2 border border-paper-300 rounded-lg p-1 bg-paper-50">
+              <button
+                onClick={() => setViewMode('grid')}
+                className={`p-2 rounded transition-colors ${
+                  viewMode === 'grid'
+                    ? 'bg-vintage-brown text-white'
+                    : 'text-vintage-brown/70 hover:text-vintage-brown'
+                }`}
+                title="그리드 뷰"
+              >
+                <Grid3x3 className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setViewMode('timeline')}
+                className={`p-2 rounded transition-colors ${
+                  viewMode === 'timeline'
+                    ? 'bg-vintage-brown text-white'
+                    : 'text-vintage-brown/70 hover:text-vintage-brown'
+                }`}
+                title="타임라인 뷰"
+              >
+                <List className="w-4 h-4" />
+              </button>
+            </div>
             <Button
               variant={showStorybooksOnly ? 'outline' : 'secondary'}
               onClick={() => setShowStorybooksOnly((prev) => !prev)}
@@ -131,60 +172,141 @@ export const TripListPage = () => {
             </div>
           </Card>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {trips
-              .filter((trip) => (showStorybooksOnly ? trip.hasStorybook : true))
-              .map((trip) => (
-              <Card
-                key={trip.id}
-                hover
-                onClick={() =>
-                  navigate(trip.hasStorybook ? `/trip/${trip.id}/storybook` : `/trip/${trip.id}`)
-                }
-                className="p-6 cursor-pointer relative group page-turn"
-              >
-                {/* 책갈피 표시 */}
-                {trip.hasStorybook && (
-                  <div className="absolute top-0 right-0 w-8 h-12 bg-gradient-to-b from-vintage-brown to-vintage-tan shadow-md opacity-80" 
-                       style={{ clipPath: 'polygon(0 0, 100% 0, 100% 85%, 50% 100%, 0 85%)' }} />
-                )}
-                
-                <div className="space-y-4">
-                  <div className="flex justify-between items-start">
-                    <h3 className="text-xl font-book font-semibold text-vintage-brown line-clamp-2 pr-2">
-                      {trip.title}
-                    </h3>
+          <>
+            {viewMode === 'grid' ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {trips
+                  .filter((trip) => (showStorybooksOnly ? trip.hasStorybook : true))
+                  .map((trip) => (
+                  <Card
+                    key={trip.id}
+                    hover
+                    onClick={() =>
+                      navigate(trip.hasStorybook ? `/trip/${trip.id}/storybook` : `/trip/${trip.id}`)
+                    }
+                    className="p-6 cursor-pointer relative group page-turn"
+                  >
+                    {/* 책갈피 표시 */}
                     {trip.hasStorybook && (
-                      <CheckCircle2 className="w-6 h-6 text-vintage-brown flex-shrink-0" />
+                      <div className="absolute top-0 right-0 w-8 h-12 bg-gradient-to-b from-vintage-brown to-vintage-tan shadow-md opacity-80" 
+                           style={{ clipPath: 'polygon(0 0, 100% 0, 100% 85%, 50% 100%, 0 85%)' }} />
                     )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-vintage-brown/70">
-                      <Calendar className="w-4 h-4" />
-                      <span className="text-sm font-book">{trip.date}</span>
-                    </div>
                     
-                    {trip.members.length > 0 && (
-                      <div className="flex items-center gap-2 text-vintage-brown/70">
-                        <Users className="w-4 h-4" />
-                        <span className="text-sm font-book">{trip.members.join(', ')}</span>
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-start">
+                        <h3 className="text-xl font-book font-semibold text-vintage-brown line-clamp-2 pr-2">
+                          {trip.title}
+                        </h3>
+                        {trip.hasStorybook && (
+                          <CheckCircle2 className="w-6 h-6 text-vintage-brown flex-shrink-0" />
+                        )}
                       </div>
-                    )}
-                  </div>
 
-                  {trip.hasStorybook && (
-                    <div className="pt-4 border-t border-paper-300">
-                      <span className="inline-flex items-center gap-1 text-sm text-vintage-brown font-book font-medium">
-                        <CheckCircle2 className="w-4 h-4" />
-                        스토리북 생성 완료
-                      </span>
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2 text-vintage-brown/70">
+                          <Calendar className="w-4 h-4" />
+                          <span className="text-sm font-book">{trip.date}</span>
+                        </div>
+                        
+                        {trip.members.length > 0 && (
+                          <div className="flex items-center gap-2 text-vintage-brown/70">
+                            <Users className="w-4 h-4" />
+                            <span className="text-sm font-book">{trip.members.join(', ')}</span>
+                          </div>
+                        )}
+                      </div>
+
+                      {trip.hasStorybook && (
+                        <div className="pt-4 border-t border-paper-300">
+                          <span className="inline-flex items-center gap-1 text-sm text-vintage-brown font-book font-medium">
+                            <CheckCircle2 className="w-4 h-4" />
+                            스토리북 생성 완료
+                          </span>
+                        </div>
+                      )}
                     </div>
-                  )}
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <div className="max-w-4xl mx-auto">
+                <div className="relative">
+                  {/* 타임라인 라인 */}
+                  <div className="absolute left-8 top-0 bottom-0 w-0.5 bg-vintage-brown/20" />
+                  
+                  <div className="space-y-8">
+                    {trips
+                      .filter((trip) => (showStorybooksOnly ? trip.hasStorybook : true))
+                      .sort((a, b) => {
+                        // 날짜순 정렬 (최신순)
+                        const dateA = new Date(a.date).getTime();
+                        const dateB = new Date(b.date).getTime();
+                        return dateB - dateA;
+                      })
+                      .map((trip) => (
+                      <div key={trip.id} className="relative flex items-start gap-6 group">
+                        {/* 타임라인 점 */}
+                        <div className="relative z-10 flex-shrink-0">
+                          <div className="w-4 h-4 rounded-full bg-vintage-brown border-4 border-paper-50 shadow-md group-hover:scale-125 transition-transform" />
+                        </div>
+                        
+                        {/* 카드 */}
+                        <Card
+                          hover
+                          onClick={() =>
+                            navigate(trip.hasStorybook ? `/trip/${trip.id}/storybook` : `/trip/${trip.id}`)
+                          }
+                          className="flex-1 p-6 cursor-pointer relative page-turn"
+                        >
+                          {/* 책갈피 표시 */}
+                          {trip.hasStorybook && (
+                            <div className="absolute top-0 right-0 w-8 h-12 bg-gradient-to-b from-vintage-brown to-vintage-tan shadow-md opacity-80" 
+                                 style={{ clipPath: 'polygon(0 0, 100% 0, 100% 85%, 50% 100%, 0 85%)' }} />
+                          )}
+                          
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="flex-1 space-y-3">
+                              <div className="flex items-center gap-3">
+                                <h3 className="text-xl font-book font-semibold text-vintage-brown">
+                                  {trip.title}
+                                </h3>
+                                {trip.hasStorybook && (
+                                  <CheckCircle2 className="w-5 h-5 text-vintage-brown flex-shrink-0" />
+                                )}
+                              </div>
+                              
+                              <div className="flex items-center gap-4 text-sm text-vintage-brown/70">
+                                <div className="flex items-center gap-1.5">
+                                  <Calendar className="w-4 h-4" />
+                                  <span className="font-book">{trip.date}</span>
+                                </div>
+                                
+                                {trip.members.length > 0 && (
+                                  <div className="flex items-center gap-1.5">
+                                    <Users className="w-4 h-4" />
+                                    <span className="font-book">{trip.members.join(', ')}</span>
+                                  </div>
+                                )}
+                              </div>
+                              
+                              {trip.hasStorybook && (
+                                <div className="pt-2">
+                                  <span className="inline-flex items-center gap-1 text-sm text-vintage-brown font-book font-medium">
+                                    <CheckCircle2 className="w-4 h-4" />
+                                    스토리북 생성 완료
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </Card>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </Card>
-            ))}
-          </div>
+              </div>
+            )}
+          </>
         )}
       </main>
     </div>
